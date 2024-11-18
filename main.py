@@ -1,11 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+"""Kinaxis web crawler for case studies."""
+
+import os
 import time
 from datetime import datetime
-import os
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
 
 class KinaxisCrawler:
+    """Crawler for extracting case studies from Kinaxis website."""
+    
     def __init__(self):
         self.base_url = "https://www.kinaxis.com"
         self.visited_urls = set()

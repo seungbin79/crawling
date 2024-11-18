@@ -1,7 +1,10 @@
+"""Kinaxis case study scraper with pagination support."""
+
+import time
+
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-import time
 
 def scrape_kinaxis_case_studies():
     """

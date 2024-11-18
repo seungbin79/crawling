@@ -1,8 +1,11 @@
-import pandas as pd
-import requests
-import time
+"""Company information processor using Perplexity and OpenAI APIs."""
+
 import json
 import os
+import time
+
+import pandas as pd
+import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 

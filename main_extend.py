@@ -1,13 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+"""Extended Kinaxis crawler with OpenAI integration."""
+
+import csv
+import json
+import os
+import re
 import time
 from datetime import datetime
-import os
+from urllib.parse import urljoin
+
 import openai
-import json
-import re
-import csv
+import requests
+from bs4 import BeautifulSoup
 
 class KinaxisCrawler:
     def __init__(self):
