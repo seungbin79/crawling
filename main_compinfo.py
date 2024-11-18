@@ -12,20 +12,72 @@ def get_company_info_from_perplexity(company_name):
             "Content-Type": "application/json"
         }
         
-        query = f"What is the parent company, country of origin, and industry details for {company_name}?"
+        query = f"""For {company_name}, provide ONLY these details in a structured format:                            
+                1. Original/Parent company name                    
+                2. Parent company's country of headquarters        
+                3. Industry classification:                        
+                    - NAICS 3-digit code                            
+                    - NAICS 4-digit code                            
+                    - NAICS 5-digit code                            
+                4. Annual revenue in USD (2023 or most recent)     
+                                                                    
+                Format response as:                                
+                Original Company: [name]                           
+                Parent Company: [name]                             
+                Country: [country]                                 
+                NAICS-3: [code]                                    
+                NAICS-4: [code]                                    
+                NAICS-5: [code]                                    
+                Revenue: [amount in USD]                           
+                                                                    
+                If any information is unavailable, write 'Not Available'."""  
         
         response = requests.post(
             api_url,
             headers=headers,
-            json={"query": query}
+            json={"query": query},
+            timeout=30
         )
         
         if response.status_code == 200:
-            return response.json()
-        return None
-    except Exception as e:
-        print(f"Error querying API for {company_name}: {str(e)}")
-        return None
+            response_data = response.json()                
+                                                            
+             # Extract and validate the data                
+            company_info = {
+                 'original_company_name': str(response_data.get('Original Company', 'Not Available')).strip(),                                      
+                 'parent_company': str(response_data.get('Parent Company', 'Not Available')).strip(),                                      
+                 'parent_company_country': str(response_data.get('Country', 'Not Available')).strip(),
+                 'industry_naics_3_digit': str(response_data.get('NAICS-3', 'Not Available')).strip(),
+                 'industry_naics_4_digit': str(response_data.get('NAICS-4', 'Not Available')).strip(),
+                 'industry_naics_5_digit': str(response_data.get('NAICS-5', 'Not Available')).strip(),
+                 'revenue_2023_usd': str(response_data.get('Revenue', 'Not Available')).strip()
+             }                                              
+                                                            
+             # Validate NAICS codes are numeric             
+            for key in ['industry_naics_3_digit', 'industry_naics_4_digit', 'industry_naics_5_digit']:       
+                if company_info[key] != 'Not Available':   
+                    if not company_info[key].isdigit():    
+                        company_info[key] = 'Not Available'
+                                                            
+            return company_info                            
+                                                            
+    except requests.Timeout:                               
+         print(f"Timeout error querying API for {company_name}")                                           
+    except requests.RequestException as e:                 
+        print(f"Network error querying API for {company_name}: {str(e)}")                                 
+    except Exception as e:                                 
+        print(f"Error processing data for {company_name}: {str(e)}")                                                 
+                                                            
+    # Return default values if any error occurs            
+    return {                                               
+         'original_company_name': 'Not Available',          
+         'parent_company': 'Not Available',                 
+         'parent_company_country': 'Not Available',         
+         'industry_naics_3_digit': 'Not Available',         
+         'industry_naics_4_digit': 'Not Available',         
+         'industry_naics_5_digit': 'Not Available',         
+         'revenue_2023_usd': 'Not Available'                
+    }             
 
 def process_missing_data():
     try:
