@@ -49,21 +49,28 @@ class KinaxisCrawler:
             return []
 
     def extract_information(self, content, url):
+        """Extract structured information from case study content.
+        
+        Args:
+            content (str): The case study content text
+            url (str): Source URL of the content
+            
+        Returns:
+            dict: Extracted information in structured format
+        """
         try:
-            prompt = f"""다음 텍스트에서 아래 정보를 추출해 주세요:
-
-텍스트:
-{content}
-
-추출할 정보 (JSON 형식):
-{{
-  "고객사정보": "",
-  "적용솔루션 툴": "",
-  "적용솔루션시점": "",
-  "URL 등록시점": "",
-  "URL 주소": ""
-}}
-"""
+            prompt = (
+                "다음 텍스트에서 아래 정보를 추출해 주세요:\n\n"
+                f"텍스트:\n{content}\n\n"
+                "추출할 정보 (JSON 형식):\n"
+                "{\n"
+                '  "고객사정보": "",\n'
+                '  "적용솔루션 툴": "",\n'
+                '  "적용솔루션시점": "",\n'
+                '  "URL 등록시점": "",\n'
+                '  "URL 주소": ""\n'
+                "}"
+            )
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": prompt}],

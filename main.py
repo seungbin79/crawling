@@ -21,6 +21,14 @@ class KinaxisCrawler:
         }
 
     def get_links(self, url):
+        """Extract and validate all links from a given URL.
+        
+        Args:
+            url (str): The URL to extract links from
+            
+        Returns:
+            list: List of valid full URLs that haven't been visited
+        """
         try:
             response = requests.get(url, headers=self.headers)
             soup = BeautifulSoup(response.text, "html.parser")
@@ -30,10 +38,7 @@ class KinaxisCrawler:
             for link in links:
                 href = link["href"]
                 full_url = urljoin(self.base_url, href)
-                if (
-                    full_url.startswith(self.base_url)
-                    and full_url not in self.visited_urls
-                ):
+                if full_url.startswith(self.base_url) and full_url not in self.visited_urls:
                     valid_links.append(full_url)
 
             return valid_links
@@ -42,7 +47,16 @@ class KinaxisCrawler:
             return []
 
     def crawl_page(self, url, depth=0):
-        if depth > 3 or url in self.visited_urls:  # 최대 깊이 제한
+        """Recursively crawl pages starting from given URL.
+        
+        Args:
+            url (str): URL to crawl
+            depth (int): Current recursion depth
+            
+        Returns:
+            None
+        """
+        if depth > 3 or url in self.visited_urls:  # Maximum depth limit
             return
 
         self.visited_urls.add(url)

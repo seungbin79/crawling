@@ -8,8 +8,13 @@ from bs4 import BeautifulSoup
 
 
 def scrape_kinaxis_case_studies():
-    """
-    Scrapes customer case studies from Kinaxis website with pagination
+    """Scrape customer case studies from Kinaxis website with pagination.
+    
+    Fetches case study data including company names and descriptions,
+    handling multiple pages of results. Saves results to both CSV and Excel.
+    
+    Returns:
+        pandas.DataFrame: DataFrame containing the scraped case studies
     """
     base_url = "https://www.kinaxis.com/en/customers"
     all_case_studies = []
