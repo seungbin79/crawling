@@ -80,7 +80,7 @@ def get_company_info_from_perplexity(company_name):
         - Revenue should be in million USD with M suffix
         - Use "Not Available" for missing information
         - Parent company should be ultimate parent, or same as original if independent
-        
+        g
         Example output:
         initial_company_name: Tesla
 
