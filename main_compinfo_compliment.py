@@ -20,23 +20,27 @@ def get_company_info_from_perplexity(company_name):
             "Content-Type": "application/json"
         }
 
-        query = f"""For {company_name}, provide these details with high focus on accuracy:
-                1. NAICS codes with descriptions:
-                   - Exact 3-digit code and description
-                   - Exact 4-digit code and description
-                   - Exact 5-digit code and description
+        query = f"""For {company_name}, provide these details with strict NAICS code formatting:
+                1. NAICS codes with descriptions (MUST follow exact digit requirements):
+                   - EXACTLY 3-digit code (e.g., '334') with description
+                   - EXACTLY 4-digit code (e.g., '3341') with description
+                   - EXACTLY 5-digit code (e.g., '33411') with description
                 2. Revenue:
                    - Most recent annual revenue (specify year)
                    - If 2023 not available, provide latest year
                    - Convert all amounts to USD
                 
-                Format response as:
-                NAICS-3: [code] - [description]
-                NAICS-4: [code] - [description]
-                NAICS-5: [code] - [description]
+                Format response EXACTLY as:
+                NAICS-3: [3 digits only] - [description]
+                NAICS-4: [4 digits only] - [description]
+                NAICS-5: [5 digits only] - [description]
                 Revenue: [amount] USD ([year])
                 
-                Be precise with NAICS codes and ensure each level is correct and properly nested.
+                Rules for NAICS codes:
+                - 3-digit must be EXACTLY 3 digits
+                - 4-digit must be EXACTLY 4 digits
+                - 5-digit must be EXACTLY 5 digits
+                - Each code must be properly nested (4-digit must start with same digits as 3-digit)
                 If any information is unavailable, write 'Not Available'."""
 
         payload = {
@@ -66,17 +70,20 @@ def get_company_info_from_perplexity(company_name):
         system_prompt = """You are a data structuring assistant specializing in NAICS codes and revenue data. 
         Convert the provided company information into a specific JSON format.
         Follow these rules strictly:
-        - NAICS codes must include both code and description
+        - NAICS codes MUST be exact lengths (3, 4, or 5 digits) with descriptions
+        - 3-digit code must be exactly 3 digits (e.g., "334")
+        - 4-digit code must be exactly 4 digits (e.g., "3341")
+        - 5-digit code must be exactly 5 digits (e.g., "33411")
         - Revenue should be in million USD with M suffix
         - Include the year for revenue in parentheses
         - Use "Not Available" for missing information
-        - Ensure NAICS codes are properly nested (4-digit should be subdivision of 3-digit, etc.)
+        - Ensure NAICS codes are properly nested (4-digit must start with same digits as 3-digit)
         
         Example output:
         {
-            "industry_naics_3_digit": "336 - Transportation Equipment Manufacturing",
-            "industry_naics_4_digit": "3361 - Motor Vehicle Manufacturing",
-            "industry_naics_5_digit": "33611 - Automobile and Light Duty Motor Vehicle Manufacturing",
+            "industry_naics_3_digit": "334 - Computer and Electronic Product Manufacturing",
+            "industry_naics_4_digit": "3341 - Computer and Peripheral Equipment Manufacturing",
+            "industry_naics_5_digit": "33411 - Computer and Peripheral Equipment Manufacturing",
             "revenue_latest": "96,773 M (2023)"
         }
         """
@@ -110,6 +117,18 @@ def get_company_info_from_perplexity(company_name):
             'revenue_latest': 'Not Available'
         }
 
+def validate_naics_code(code, expected_length):
+    """Validate NAICS code format and length"""
+    if code == 'Not Available':
+        return True
+    try:
+        # Remove description part if present
+        code_part = code.split(' - ')[0].strip()
+        # Check if it's exactly the expected length and all digits
+        return len(code_part) == expected_length and code_part.isdigit()
+    except:
+        return False
+
 def process_company_data():
     try:
         # Read the Excel file
@@ -123,12 +142,27 @@ def process_company_data():
             company_name = row['initial_company_name']
             
             # Check if NAICS codes or revenue need updating
+            needs_update = False
+            
+            # Validate NAICS codes
+            if (pd.isna(row['industry_naics_3_digit']) or 
+                not validate_naics_code(str(row['industry_naics_3_digit']), 3)):
+                needs_update = True
+            
             if (pd.isna(row['industry_naics_4_digit']) or 
-                pd.isna(row['industry_naics_5_digit']) or 
-                row['industry_naics_4_digit'] == 'Not Available' or 
-                row['industry_naics_5_digit'] == 'Not Available' or 
-                row['revenue_2023_usd'] == 'Not Available' or 
+                not validate_naics_code(str(row['industry_naics_4_digit']), 4)):
+                needs_update = True
+            
+            if (pd.isna(row['industry_naics_5_digit']) or 
+                not validate_naics_code(str(row['industry_naics_5_digit']), 5)):
+                needs_update = True
+            
+            # Check revenue
+            if (row['revenue_2023_usd'] == 'Not Available' or 
                 pd.isna(row['revenue_2023_usd'])):
+                needs_update = True
+                
+            if needs_update:
                 
                 print(f"Processing: {company_name}")
                 
