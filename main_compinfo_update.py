@@ -104,6 +104,45 @@ def get_company_info_from_perplexity(company_name):
             'revenue_2023_usd': 'Not Available'
         }
 
+def contains_mixed_characters(text):
+    """Check if text contains mixed language characters or broken encodings"""
+    if pd.isna(text):
+        return False
+        
+    # Check for Korean characters (Hangul)
+    korean_range = range(0xAC00, 0xD7AF + 1)
+    # Check for Japanese characters (Hiragana, Katakana, Kanji)
+    japanese_ranges = [range(0x3040, 0x309F + 1), range(0x30A0, 0x30FF + 1), range(0x4E00, 0x9FFF + 1)]
+    # Check for special characters that might indicate broken encoding
+    special_chars = ['�', '¿', 'Â', 'Ã', '±', '¼', '½']
+    
+    has_latin = False
+    has_cjk = False
+    has_special = False
+    
+    for char in str(text):
+        code = ord(char)
+        
+        # Check for Latin characters
+        if ('a' <= char <= 'z') or ('A' <= char <= 'Z'):
+            has_latin = True
+            
+        # Check for Korean
+        if code in korean_range:
+            has_cjk = True
+            
+        # Check for Japanese
+        for jp_range in japanese_ranges:
+            if code in jp_range:
+                has_cjk = True
+                
+        # Check for special characters that might indicate broken encoding
+        if char in special_chars:
+            has_special = True
+            
+    # Return True if we have a mix of character types or special characters
+    return (has_latin and has_cjk) or has_special
+
 def process_company_data():
     try:
         # Read the CSV file
@@ -119,6 +158,7 @@ def process_company_data():
             # Check if name needs fixing or revenue is missing/incorrect
             if pd.isna(row['original_company_name']) or \
                row['original_company_name'] == 'Not Available' or \
+               contains_mixed_characters(row['original_company_name']) or \
                pd.isna(row['revenue_2023_usd']) or \
                row['revenue_2023_usd'] == 'Not Available' or \
                not str(row['revenue_2023_usd']).endswith('M'):
