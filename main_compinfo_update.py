@@ -81,7 +81,7 @@ def get_company_info_from_perplexity(company_name):
 
         # Call OpenAI API
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -161,6 +161,7 @@ def process_company_data():
                contains_mixed_characters(row['original_company_name']) or \
                pd.isna(row['revenue_2023_usd']) or \
                row['revenue_2023_usd'] == 'Not Available' or \
+               row['revenue_2023_usd'] == 'Not Applicable' or \
                not str(row['revenue_2023_usd']).endswith('M'):
                 
                 print(f"Processing: {company_name}")

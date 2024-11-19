@@ -91,7 +91,7 @@ def get_company_info_from_perplexity(company_name):
             "initial_company_name": "Tesla",
             "original_company_name": "Tesla, Inc.",
             "parent_company": "Tesla, Inc.",
-            "parent_company_country": "US",
+            "parent_company_country": "USA",
             "industry_naics_3_digit": "336 - Transportation Equipment Manufacturing",
             "industry_naics_4_digit": "3361 - Motor Vehicle Manufacturing",
             "industry_naics_5_digit": "33611 - Automobile and Light Duty Motor Vehicle Manufacturing",
@@ -147,15 +147,10 @@ def get_company_info_from_perplexity(company_name):
 def process_missing_data():
     try:
         # Read the CSV file with missing data
-        df = pd.read_csv('comp_missing.csv')
+        df = pd.read_csv('comp_o9.csv')
         
-        # Find rows with missing or 'Not Available' in original_company_name
-        missing_mask = (df['original_company_name'].isna()) | \
-                      (df['original_company_name'] == 'Not Available') | \
-                      (df['original_company_name'] == 'Not applicable')
-        
-        # Process each company with missing data
-        for idx, row in df[missing_mask].iterrows():
+        # Process each company in the dataset
+        for idx, row in df.iterrows():
             company_name = row['initial_company_name']
             print(f"Querying information for: {company_name}")
             
@@ -177,8 +172,8 @@ def process_missing_data():
             # Add a delay to respect API rate limits
             time.sleep(1)
         
-        # Save the updated dataframe
-        df.to_csv('company_info_updated.csv', index=False)
+        # Save the updated dataframe to Excel format
+        df.to_excel('company_info_updated_o9.xlsx', index=False)
         print("Successfully updated company information and saved to company_info_updated.csv")
         
     except Exception as e:

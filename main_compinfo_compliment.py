@@ -186,7 +186,7 @@ def process_company_data():
                 time.sleep(1)
         
         # Save to Excel file
-        output_file = 'company_info_naics_revenue_updated.xlsx'
+        output_file = 'company_info_o9_naics_revenue_updated.xlsx'
         updated_df.to_excel(output_file, index=False)
         print(f"Successfully updated company information and saved to {output_file}")
         
