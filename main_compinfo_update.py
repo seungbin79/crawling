@@ -22,7 +22,7 @@ def get_company_info_from_perplexity(company_name):
 
         query = f"""For {company_name}, provide ONLY these details with high focus on accuracy:
                 1. Official/Legal company name (full correct name)
-                2. Parent company's country of headquarters
+                2. Parent company's country of headquarters  
                 3. Revenue in USD for 2023 (if not available, most recent year)
                 
                 Format response as:
@@ -67,6 +67,7 @@ def get_company_info_from_perplexity(company_name):
         
         Example output:
         {
+            "initial_company_name": "Tesla",
             "original_company_name": "Tesla, Inc.",
             "parent_company_country": "US",
             "revenue_2023_usd": "96,773 M"
@@ -91,11 +92,13 @@ def get_company_info_from_perplexity(company_name):
 
         # Parse the JSON response
         structured_data = json.loads(completion.choices[0].message.content)
+        structured_data["initial_company_name"] = company_name  # Add initial name to response
         return structured_data
 
     except Exception as e:
         print(f"Error processing data for {company_name}: {str(e)}")
         return {
+            'initial_company_name': company_name,
             'original_company_name': 'Not Available',
             'parent_company_country': 'Not Available',
             'revenue_2023_usd': 'Not Available'
@@ -126,13 +129,18 @@ def process_company_data():
                 company_info = get_company_info_from_perplexity(company_name)
                 
                 if company_info:
-                    # Update the dataframe
+                    # Update the dataframe while preserving initial_company_name
+                    updated_df.at[idx, 'initial_company_name'] = company_name  # Ensure initial name is preserved
                     updated_df.at[idx, 'original_company_name'] = company_info.get('original_company_name')
                     updated_df.at[idx, 'parent_company_country'] = company_info.get('parent_company_country')
                     updated_df.at[idx, 'revenue_2023_usd'] = company_info.get('revenue_2023_usd')
                 
                 # Add delay to respect API rate limits
                 time.sleep(1)
+        
+        # Ensure initial_company_name is the first column in the Excel file
+        columns_order = ['initial_company_name'] + [col for col in updated_df.columns if col != 'initial_company_name']
+        updated_df = updated_df[columns_order]
         
         # Save to Excel file
         output_file = 'company_info_corrected.xlsx'
